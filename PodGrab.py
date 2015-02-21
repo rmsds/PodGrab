@@ -85,7 +85,6 @@ def main(argv):
 	#2015-02-21 download dir is no longer a sub dir - it's an absolute path in itself.
         download_directory = DOWNLOAD_DIRECTORY
 
-	print download_directory
 	global total_items
 	global total_size
 	total_items = 0
