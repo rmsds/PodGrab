@@ -50,7 +50,9 @@ MODE_IMPORT = 80
 
 NUM_MAX_DOWNLOADS = 4
 
-DOWNLOAD_DIRECTORY = "podcasts"
+#DOWNLOAD_DIRECTORY = "podcasts"
+# 2015-02-21 changed directory for the router - need to change a reference later
+DOWNLOAD_DIRECTORY = "/mnt/router/Music/Podcasts"
 
 # Added 2011-10-06 Werner Avenant - added current_dictory here so it can be global
 current_directory = ''
@@ -78,8 +80,12 @@ def main(argv):
 	now = datetime.datetime.now();
 	m3u_file = str(now)[:10] + '.m3u' 
 	current_directory = os.path.realpath(os.path.dirname(sys.argv[0]))
-	download_directory = current_directory + os.sep + DOWNLOAD_DIRECTORY
 
+	#download_directory = current_directory + os.sep + DOWNLOAD_DIRECTORY
+	#2015-02-21 download dir is no longer a sub dir - it's an absolute path in itself.
+        download_directory = DOWNLOAD_DIRECTORY
+
+	print download_directory
 	global total_items
 	global total_size
 	total_items = 0
@@ -175,7 +181,7 @@ def main(argv):
 			cursor = connection.cursor()
 			setup_database(cursor, connection)
 			print "Database setup complete"
-			
+	
 	if not os.path.exists(download_directory):
 		print "Podcast download directory is missing. Creating..."
 		try:
@@ -394,7 +400,7 @@ def write_podcast(item, channel_title, date, type):
 	if len(item_file_name) > 50:
 		item_file_name = item_file_name[:50]
 	
-	local_file = current_directory + os.sep + DOWNLOAD_DIRECTORY + os.sep + channel_title + os.sep + clean_string(item_file_name)
+	local_file = DOWNLOAD_DIRECTORY + os.sep + channel_title + os.sep + clean_string(item_file_name)
 	if type == "video/quicktime" or type == "audio/mp4" or type == "video/mp4":
 		if not local_file.endswith(".mp4"):
 			local_file = local_file + ".mp4"
