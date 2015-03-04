@@ -20,6 +20,7 @@
 #   worry, they've downloaded.
 
 
+from __future__ import unicode_literals
 import os
 import sys
 import argparse
@@ -34,6 +35,7 @@ from email.mime.text import MIMEText
 import platform
 import traceback
 import unicodedata
+
 
 
 MODE_NONE = 70
