@@ -3,7 +3,7 @@
 # PodGrab - A Python command line audio/video podcast downloader for RSS XML feeds.
 # Supported RSS item file types: MP3, M4V, OGG, FLV, MP4, MPG/MPEG, WMA, WMV, WEBM
 # Version: 1.1.2 - 06/10/2011
-# Jonathan Baker 
+# Jonathan Baker
 # jon@the-node.org (http://the-node.org)
 
 # Werner Avenant - added small changes to write M3U file of podcasts downloaded today
@@ -11,13 +11,13 @@
 
 # Do with this code what you will, it's "open source". As a courtesy,
 # I would appreciate credit if you base your code on mine. If you find
-# a bug or think the code sucks balls, please let me know :-) 
+# a bug or think the code sucks balls, please let me know :-)
 
 # Outstanding issues:-
 # - Video podcasts which which are not direct URLs and are modified by PodGrab
-#   in order to be grabbed won't display their size as the filenames haven't 
-#   been stripped of their garbage URL info yet. It'll say 0 bytes, but don't 
-#   worry, they've downloaded. 
+#   in order to be grabbed won't display their size as the filenames haven't
+#   been stripped of their garbage URL info yet. It'll say 0 bytes, but don't
+#   worry, they've downloaded.
 
 
 import os
@@ -50,7 +50,9 @@ MODE_IMPORT = 80
 
 NUM_MAX_DOWNLOADS = 4
 
-DOWNLOAD_DIRECTORY = "podcasts"
+#DOWNLOAD_DIRECTORY = "podcasts"
+# 2015-02-21 changed directory for the router - need to change a reference later
+DOWNLOAD_DIRECTORY = "/mnt/router/Music/Podcasts"
 
 # Added 2011-10-06 Werner Avenant - added current_dictory here so it can be global
 current_directory = ''
@@ -74,11 +76,14 @@ def main(argv):
 	mail = ""
 	# Added 2011-10-06 Werner Avenant
 	global current_directory
-	global m3u_file 
+	global m3u_file
 	now = datetime.datetime.now();
-	m3u_file = str(now)[:10] + '.m3u' 
+	m3u_file = str(now)[:10] + '.m3u'
 	current_directory = os.path.realpath(os.path.dirname(sys.argv[0]))
-	download_directory = current_directory + os.sep + DOWNLOAD_DIRECTORY
+
+	#download_directory = current_directory + os.sep + DOWNLOAD_DIRECTORY
+	#2015-02-21 download dir is no longer a sub dir - it's an absolute path in itself.
+        download_directory = DOWNLOAD_DIRECTORY
 
 	global total_items
 	global total_size
@@ -99,9 +104,9 @@ def main(argv):
 
 	parser.add_argument('-io', '--import', action="store", dest="opml_import", help='Import subscriptions from OPML file')
 	parser.add_argument('-eo', '--export', action="store_const", const="OPML_EXPORT", dest="opml_export", help='Export subscriptions to OPML file')
-	
+
 	arguments = parser.parse_args()
-	
+
 	if arguments.sub_feed_url:
 		feed_url = arguments.sub_feed_url
 		data = open_datasource(feed_url)
@@ -111,49 +116,49 @@ def main(argv):
 		else:
 			print "XML data source opened\n"
 			mode = MODE_SUBSCRIBE
-			
+
 	elif arguments.dl_feed_url:
 		feed_url = arguments.dl_feed_url
 		data = open_datasource(feed_url)
 		if not data:
 			error_string = "Not a valid XML file or URL feed!"
-			has_error = 1 
+			has_error = 1
 		else:
 			print "XML data source opened\n"
 			mode = MODE_DOWNLOAD
-			
+
 	elif arguments.unsub_url:
 		feed_url = arguments.unsub_url
 		mode = MODE_UNSUBSCRIBE
-		
+
 	elif arguments.list_subs:
 		mode = MODE_LIST
-		
+
 	elif arguments.update_subs:
 		mode = MODE_UPDATE
-		
+
 	elif arguments.mail_address_add:
 		mail_address = arguments.mail_address_add
 		mode = MODE_MAIL_ADD
-		
+
 	elif arguments.mail_address_delete:
 		mail_address = arguments.mail_address_delete
 		mode = MODE_MAIL_DELETE
-		
+
 	elif arguments.list_mail:
 		mode = MODE_MAIL_LIST
-		
+
 	elif arguments.opml_import:
 		import_file_name = arguments.opml_import
 		mode = MODE_IMPORT
-		
+
 	elif arguments.opml_export:
 		mode = MODE_EXPORT
-		
+
 	else:
 		error_string = "No Arguments supplied - for usage run 'PodGrab.py -h'"
 		has_error = 1
-		
+
 	print "Default encoding: " + sys.getdefaultencoding()
 	todays_date = strftime("%a, %d %b %Y %H:%M:%S", gmtime())
 	print "Current Directory: ", current_directory
@@ -175,7 +180,7 @@ def main(argv):
 			cursor = connection.cursor()
 			setup_database(cursor, connection)
 			print "Database setup complete"
-			
+
 	if not os.path.exists(download_directory):
 		print "Podcast download directory is missing. Creating..."
 		try:
@@ -185,7 +190,7 @@ def main(argv):
 			error_string = "Could not create podcast download sub-directory!"
 			has_error = 1
 	else:
-		print "Download directory exists: '" + download_directory + "'" 
+		print "Download directory exists: '" + download_directory + "'"
 	if not has_error:
 		if mode == MODE_UNSUBSCRIBE:
 			feed_name = get_name_from_feed(cursor, connection, feed_url)
@@ -199,7 +204,7 @@ def main(argv):
 				try :
 					shutil.rmtree(channel_directory)
 				except OSError:
-					print "Subscription directory has not been found - it might have been manually deleted" 
+					print "Subscription directory has not been found - it might have been manually deleted"
 				print "Subscription '" + feed_name + "' removed"
 		elif mode == MODE_LIST:
 			print "Listing current podcast subscriptions...\n"
@@ -310,7 +315,7 @@ def import_opml_file(cur, conn, cur_dir, download_dir, import_file):
 				print "Subscription Title: " + item_name
 				print "Subscription Feed: " + item_feed
                 		item_directory = download_dir + os.sep + item_name
-			
+
 				if not os.path.exists(item_directory):
                         		os.makedirs(item_directory)
 				if not does_sub_exist(cur, conn, item_feed):
@@ -336,7 +341,7 @@ def iterate_feed(data, mode, download_dir, today, cur, conn, feed):
                 	print "Channel Title: ===" + channel_title + "==="
                 	print "Channel Link: " + channel_link
 			channel_title = clean_string(channel_title)
-                  
+
                 	channel_directory = download_dir + os.sep + channel_title
                 	if not os.path.exists(channel_directory):
                 		os.makedirs(channel_directory)
@@ -344,7 +349,7 @@ def iterate_feed(data, mode, download_dir, today, cur, conn, feed):
                 	if mode == MODE_DOWNLOAD:
                 		print "Bulk download. Processing..."
                           # 2011-10-06 Replaced channel_directory with channel_title - needed for m3u file later
-                        	num_podcasts = iterate_channel(channel, today, mode, cur, conn, feed, channel_title) 
+                        	num_podcasts = iterate_channel(channel, today, mode, cur, conn, feed, channel_title)
                         	print "\n", num_podcasts, "have been downloaded"
               		elif mode == MODE_SUBSCRIBE:
 				print "Feed to subscribe to: " + feed + ". Checking for database duplicate..."
@@ -352,7 +357,7 @@ def iterate_feed(data, mode, download_dir, today, cur, conn, feed):
 	                		print "Subscribe. Processing..."
                             # 2011-10-06 Replaced channel_directory with channel_title - needed for m3u file later
         	                	num_podcasts = iterate_channel(channel, today, mode, cur, conn, feed, channel_title)
-                            
+
                 	       		print "\n", num_podcasts, "have been downloaded from your subscription"
 				else:
 					print "Subscription already exists! Skipping..."
@@ -390,23 +395,23 @@ def clean_string(str):
 # in the m3u file
 def write_podcast(item, channel_title, date, type):
 	(item_path, item_file_name) = os.path.split(item)
-	
+
 	if len(item_file_name) > 50:
 		item_file_name = item_file_name[:50]
-	
-	local_file = current_directory + os.sep + DOWNLOAD_DIRECTORY + os.sep + channel_title + os.sep + clean_string(item_file_name)
+
+	local_file = DOWNLOAD_DIRECTORY + os.sep + channel_title + os.sep + clean_string(item_file_name)
 	if type == "video/quicktime" or type == "audio/mp4" or type == "video/mp4":
 		if not local_file.endswith(".mp4"):
 			local_file = local_file + ".mp4"
-      
+
 	elif type == "video/mpeg":
 		if not local_file.endswith(".mpg"):
 			local_file = local_file + ".mpg"
-      
+
 	elif type == "video/x-flv":
 		if not local_file.endswith(".flv"):
 			local_file = local_file + ".flv"
-      
+
 	elif type == "video/x-ms-wmv":
 		if not local_file.endswith(".wmv"):
 			local_file = local_file + ".wmv"
@@ -425,24 +430,34 @@ def write_podcast(item, channel_title, date, type):
 	elif type == "audio/x-ms-wma" or type == "audio/x-ms-wax":
 		if not local_file.endswith(".wma"):
 			local_file = local_file + ".wma"
-      
+
 	# Check if file exists, but if the file size is zero (which happens when the user
-	# presses Crtl-C during a download) - the the code should go ahead and download 
+	# presses Crtl-C during a download) - the the code should go ahead and download
 	# as if the file didn't exist
 	if os.path.exists(local_file) and os.path.getsize(local_file) != 0:
 		return 'File Exists'
 	else:
 		print "\nDownloading " + item_file_name + " which was published on " + date
 		try:
-			item_file = urllib2.urlopen(item)
-			output = open(local_file, 'wb')
-			# 2011-10-06 Werner Avenant - For some reason the file name changes when 
+			req = urllib2.urlopen(item)
+			CHUNK = 16 * 1024
+			with open(local_file, 'wb') as fp:
+			  while True:
+			    chunk = req.read(CHUNK)
+			    if not chunk: break
+			    fp.write(chunk)
+
+			item_file_name = os.path.basename(fp.name)
+
+			#item_file = urllib2.urlopen(item)
+			#output = open(local_file, 'wb')
+			# 2011-10-06 Werner Avenant - For some reason the file name changes when
 			# saved to disk - probably a python feature (sorry, only wrote my first line of python today)
-			item_file_name = os.path.basename(output.name)  
-			output.write(item_file.read())
-			output.close()
+			#item_file_name = os.path.basename(output.name)
+			#output.write(item_file.read())
+			#output.close()
 			print "Podcast: ", item, " downloaded to: ", local_file
-			
+
 			# 2011-11-06 Append to m3u file
 			output = open(current_directory + os.sep + m3u_file, 'a')
 			output.write(DOWNLOAD_DIRECTORY + os.sep + channel_title + os.sep + item_file_name + "\n")
@@ -515,7 +530,7 @@ def mail(server_url=None, sender='', to='', subject='', text=''):
     message = headers + text
     mail_server = smtplib.SMTP(server_url)
     mail_server.sendmail(sender, to, message)
-    mail_server.quit()	
+    mail_server.quit()
 
 
 def connect_database(curr_loc):
@@ -544,20 +559,20 @@ def iterate_channel(chan, today, mode, cur, conn, feed, channel_title):
 	size = 0
 	last_ep = "NULL"
 	print "Iterating channel..."
-	
+
 	if does_sub_exist(cur, conn, feed):
 		print "Podcast subscription exists"
-		
+
 	else:
 		print "Podcast subscription is new - getting previous podcast"
 		insert_subscription(cur, conn, chan.getElementsByTagName('title')[0].firstChild.data, feed)
 
 	last_ep = get_last_subscription_downloaded(cur, conn, feed)
-	
-	### NB NB - The logic here is that we get the "last_ep" before we enter the loop 
-	### The result is that it allows the code to "catch up" on missed episodes because 
-	### we never update the "last_ep" while inside the loop.  
-	
+
+	### NB NB - The logic here is that we get the "last_ep" before we enter the loop
+	### The result is that it allows the code to "catch up" on missed episodes because
+	### we never update the "last_ep" while inside the loop.
+
 	for item in chan.getElementsByTagName('item'):
 		try:
 			item_title = item.getElementsByTagName('title')[0].firstChild.data
@@ -566,15 +581,15 @@ def iterate_channel(chan, today, mode, cur, conn, feed, channel_title):
 			item_size = item.getElementsByTagName('enclosure')[0].getAttribute('length')
 			item_type = item.getElementsByTagName('enclosure')[0].getAttribute('type')
 			struct_time_today = strptime(today, "%a, %d %b %Y %H:%M:%S")
-			
+
 			try:
 				struct_time_item = strptime(fix_date(item_date), "%a, %d %b %Y %H:%M:%S")
-				has_error = 0	
+				has_error = 0
 			except TypeError:
 				has_error = 1
 			except ValueError:
 				has_error = 1
-			
+
 			try:
 				struct_last_ep = strptime(last_ep, "%a, %d %b %Y %H:%M:%S")
 				has_error = 0
@@ -584,15 +599,15 @@ def iterate_channel(chan, today, mode, cur, conn, feed, channel_title):
 			except ValueError:
 				has_error = 1
 				print "This item has a badly formatted date. Cannot download!"
-				
+
 			if not has_error:
 				if mktime(struct_time_item) > mktime(struct_last_ep) or mode == MODE_DOWNLOAD:
 					saved = write_podcast(item_file, channel_title, item_date, item_type)
-					
+
 					if saved == 'File Exists':
 						print "File Existed - updating local database's Last Episode";
 						update_subscription(cur, conn, feed, fix_date(item_date))
-						
+
 					if saved == 'Successful Write':
 						print "\nTitle: " + item_title
 						print "Date:  " + item_date
@@ -604,21 +619,21 @@ def iterate_channel(chan, today, mode, cur, conn, feed, channel_title):
 						size = size + int(item_size)
 						total_size += size
 						total_items += 1
-					
+
 					if (mode == MODE_SUBSCRIBE): # In subscribe mode we only want 1 this loop to execute once
 						break;
-						
+
 					if (num >= NUM_MAX_DOWNLOADS):
 						print "Maximum session download of " + str(NUM_MAX_DOWNLOADS) + " podcasts has been reached. Exiting."
 						break
 				else:
 					print "According to database we already have the episode dated " + item_date
 					break
-					
+
 		except IndexError, e:
 			#traceback.print_exc()
 			print "This RSS item has no downloadable URL link for the podcast for '" + item_title  + "'. Skipping..."
-	
+
 	return str(num) + " podcasts totalling " + str(size) + " bytes"
 
 
@@ -694,7 +709,7 @@ def get_last_subscription_downloaded(cur, conn, feed):
 	row = (feed,)
 	cur.execute('SELECT last_ep FROM subscriptions WHERE feed = ?', row)
 	rec = cur.fetchone()
-	return rec[0] 
+	return rec[0]
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
