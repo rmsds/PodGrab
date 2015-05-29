@@ -601,7 +601,8 @@ def iterate_channel(chan, today, mode, cur, conn, feed, channel_title):
                         print("Type:  " + item_type)
                         update_subscription(cur, conn, feed, fix_date(item_date))
                         num += 1
-                        size = size + int(item_size)
+                        if len(item_size):
+                            size = size + int(item_size)
                         total_size += size
                         total_items += 1
                     
