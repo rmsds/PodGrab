@@ -24,7 +24,7 @@ from __future__ import unicode_literals
 import os
 import sys
 import argparse
-import urllib.request as urllib2
+import urllib2
 import xml.dom.minidom
 import datetime
 from time import gmtime, strftime, strptime, mktime
@@ -77,9 +77,9 @@ def main(argv):
     mail = ""
     # Added 2011-10-06 Werner Avenant
     global current_directory
-	global m3u_file
+    global m3u_file
     now = datetime.datetime.now();
-    m3u_file = str(now)[:10] + '.m3u' 
+    m3u_file = str(now)[:10] + '.m3u'
     current_directory = os.path.realpath(os.path.dirname(sys.argv[0]))
     download_directory = DOWNLOAD_DIRECTORY
 
@@ -120,7 +120,7 @@ def main(argv):
         data = open_datasource(feed_url)
         if not data:
             error_string = "Not a valid XML file or URL feed!"
-			has_error = 1
+            has_error = 1
         else:
             print("XML data source opened\n")
             mode = MODE_DOWNLOAD
@@ -347,7 +347,7 @@ def iterate_feed(data, mode, download_dir, today, cur, conn, feed):
             if mode == MODE_DOWNLOAD:
                 print("Bulk download. Processing...")
                 # 2011-10-06 Replaced channel_directory with channel_title - needed for m3u file later
-                        	num_podcasts = iterate_channel(channel, today, mode, cur, conn, feed, channel_title)
+                num_podcasts = iterate_channel(channel, today, mode, cur, conn, feed, channel_title)
                 print("\n", num_podcasts, "have been downloaded")
             elif mode == MODE_SUBSCRIBE:
                 print("Feed to subscribe to: " + feed + ". Checking for database duplicate...")
@@ -431,32 +431,31 @@ def write_podcast(item, channel_title, date, type):
             local_file = local_file + ".wma"
 
     # Check if file exists, but if the file size is zero (which happens when the user
-	# presses Crtl-C during a download) - the the code should go ahead and download
+    # presses Crtl-C during a download) - the the code should go ahead and download
     # as if the file didn't exist
     if os.path.exists(local_file) and os.path.getsize(local_file) != 0:
         return 'File Exists'
     else:
         print("\nDownloading " + item_file_name + " which was published on " + date)
         try:
-			req = urllib2.urlopen(item)
-			CHUNK = 16 * 1024
-			with open(local_file, 'wb') as fp:
-			  while True:
-			    chunk = req.read(CHUNK)
-			    if not chunk: break
-			    fp.write(chunk)
+            req = urllib2.urlopen(item)
+            CHUNK = 16 * 1024
+            with open(local_file, 'wb') as fp:
+              while True:
+                chunk = req.read(CHUNK)
+                if not chunk: break
+                fp.write(chunk)
 
-			item_file_name = os.path.basename(fp.name)
+            item_file_name = os.path.basename(fp.name)
 
-			#item_file = urllib2.urlopen(item)
-			#output = open(local_file, 'wb')
-			# 2011-10-06 Werner Avenant - For some reason the file name changes when
-            # saved to disk - probably a python feature (sorry, only wrote my first line of python today)
-			#item_file_name = os.path.basename(output.name)
-			#output.write(item_file.read())
-			#output.close()
+            #item_file = urllib2.urlopen(item)
+            #output = open(local_file, 'wb')
+            # 2011-10-06 Werner Avenant - For some reason the file name changes when
+                        # saved to disk - probably a python feature (sorry, only wrote my first line of python today)
+            #item_file_name = os.path.basename(output.name)
+            #output.write(item_file.read())
+            #output.close()
             print("Podcast: ", item, " downloaded to: ", local_file)
-
             # 2011-11-06 Append to m3u file
             output = open(current_directory + os.sep + m3u_file, 'a')
             output.write(DOWNLOAD_DIRECTORY + os.sep + channel_title + os.sep + item_file_name + "\n")
@@ -568,9 +567,9 @@ def iterate_channel(chan, today, mode, cur, conn, feed, channel_title):
 
     last_ep = get_last_subscription_downloaded(cur, conn, feed)
 
-	### NB NB - The logic here is that we get the "last_ep" before we enter the loop
-	### The result is that it allows the code to "catch up" on missed episodes because
-	### we never update the "last_ep" while inside the loop.
+    ### NB NB - The logic here is that we get the "last_ep" before we enter the loop
+    ### The result is that it allows the code to "catch up" on missed episodes because
+    ### we never update the "last_ep" while inside the loop.
 
     for item in chan.getElementsByTagName('item'):
         try:
@@ -708,7 +707,7 @@ def get_last_subscription_downloaded(cur, conn, feed):
     row = (feed,)
     cur.execute('SELECT last_ep FROM subscriptions WHERE feed = ?', row)
     rec = cur.fetchone()
-	return rec[0]
+    return rec[0]
 
 if __name__ == "__main__":
     main(sys.argv[1:])
