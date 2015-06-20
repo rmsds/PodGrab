@@ -159,7 +159,7 @@ def main(argv):
 
     print("Default encoding: " + sys.getdefaultencoding())
     todays_date = strftime("%a, %d %b %Y %H:%M:%S", gmtime())
-    print("Current Directory: ", current_directory)
+    print("Current Directory: " + current_directory)
     if does_database_exist(current_directory):
         connection = connect_database(current_directory)
         if not connection:
@@ -336,27 +336,27 @@ def iterate_feed(data, mode, download_dir, today, cur, conn, feed):
         for channel in xml_data.getElementsByTagName('channel'):
             channel_title = channel.getElementsByTagName('title')[0].firstChild.data
             channel_link = channel.getElementsByTagName('link')[0].firstChild.data
-            print("Channel Title: ===" + channel_title + "===")
+            print("Channel Title: === " + channel_title + " ===")
             print("Channel Link: " + channel_link)
             channel_title = clean_string(channel_title)
 
             channel_directory = download_dir + os.sep + channel_title
             if not os.path.exists(channel_directory):
                 os.makedirs(channel_directory)
-            print("Current Date: ", today)
+            print("Current Date: " + today)
             if mode == MODE_DOWNLOAD:
                 print("Bulk download. Processing...")
                 # 2011-10-06 Replaced channel_directory with channel_title - needed for m3u file later
                 num_podcasts = iterate_channel(channel, today, mode, cur, conn, feed, channel_title)
-                print("\n", num_podcasts, "have been downloaded")
+                print("\n" + num_podcasts + "have been downloaded")
             elif mode == MODE_SUBSCRIBE:
-                print("Feed to subscribe to: " + feed + ". Checking for database duplicate...")
+                print("Feed to subscribe to: " + feed + ".\nChecking for database duplicate...")
                 if not does_sub_exist(cur, conn, feed):
-                    print("Subscribe. Processing...")
+                    print("Subscribe.\nProcessing...")
                     # 2011-10-06 Replaced channel_directory with channel_title - needed for m3u file later
                     num_podcasts = iterate_channel(channel, today, mode, cur, conn, feed, channel_title)
 
-                    print("\n", num_podcasts, "have been downloaded from your subscription")
+                    print("\n" + num_podcasts + "have been downloaded from your subscription")
                 else:
                     print("Subscription already exists! Skipping...")
             elif mode == MODE_UPDATE:
@@ -383,10 +383,10 @@ def clean_string(str):
     for c in new_string:
         if c.isalnum() or c == "-" or c == "." or c.isspace():
             new_string_final = new_string_final + ''.join(c)
-            new_string_final = new_string_final.strip()
             new_string_final = new_string_final.replace(' ','-')
             new_string_final = new_string_final.replace('---','-')
             new_string_final = new_string_final.replace('--','-')
+            new_string_final = new_string_final.strip()
 
     return new_string_final
 
@@ -451,18 +451,18 @@ def write_podcast(item, channel_title, date, type):
             #item_file = urllib2.urlopen(item)
             #output = open(local_file, 'wb')
             # 2011-10-06 Werner Avenant - For some reason the file name changes when
-                        # saved to disk - probably a python feature (sorry, only wrote my first line of python today)
+            # saved to disk - probably a python feature (sorry, only wrote my first line of python today)
             #item_file_name = os.path.basename(output.name)
             #output.write(item_file.read())
             #output.close()
-            print("Podcast: ", item, " downloaded to: ", local_file)
+            print("Podcast: " + item + " downloaded to: " + local_file)
             # 2011-11-06 Append to m3u file
             output = open(current_directory + os.sep + m3u_file, 'a')
             output.write(DOWNLOAD_DIRECTORY + os.sep + channel_title + os.sep + item_file_name + "\n")
             output.close()
             return 'Successful Write'
         except urllib2.URLError as e:
-            print("ERROR - Could not write item to file: ", e)
+            print("ERROR - Could not write item to file: " + e)
             return 'Write Error'
 
 
@@ -632,7 +632,7 @@ def iterate_channel(chan, today, mode, cur, conn, feed, channel_title):
             #traceback.print_exc()
             print("This RSS item has no downloadable URL link for the podcast for '" + item_title  + "'. Skipping...")
 
-    return str(num) + " podcasts totalling " + str(size) + " bytes"
+    return(str(num) + " podcast(s) totalling " + str(size) + " byte(s)")
 
 
 def fix_date(date):
