@@ -43,3 +43,5 @@ Changes after fork:
 	- Added option to output file names in an Season/Year Episode/Month+Day Title of Episode format
 	- Added command line switches for db location, download location, plex configuration, M3U creation
 	- Changed mkdir to mkdirs to deal with creating multiple levels of directories
+	- added option to populate missing metadata in the mp3/mp4 file from the information in the feed.
+

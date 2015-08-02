@@ -14,6 +14,8 @@
 # Version: 1.1.4 - 07/31/2015
 #   - added command line switches for db location, download location, plex configuration, M3U creation
 #   - changed mkdir to mkdirs
+# Version 1.1.5 - 8/2/2015
+#   - added option to populate missing metadata in the mp3/mp4 file from the information in the feed.
 # David Smith
 
 # Do with this code what you will, it's "open source". As a courtesy,
