@@ -42,7 +42,7 @@ from email.mime.text import MIMEText
 import platform
 import traceback
 import unicodedata
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, call
 
 
 MODE_NONE = 70
@@ -60,6 +60,7 @@ MODE_IMPORT = 80
 NUM_MAX_DOWNLOADS = 4
 PLEX_NAMING = 0
 CREATE_M3U = 0
+UPDATE_METADATA = 0
 
 DOWNLOAD_DIRECTORY = "podcasts"
 #DOWNLOAD_DIRECTORY = os.path.realpath("/home/hrehfeld/host/d/download/podcasts_podgrab")
@@ -94,6 +95,7 @@ def main(argv):
     db_name = "PodGrab.db"
     db_path=current_directory
 
+    global UPDATE_METADATA
     global DOWNLOAD_DIRECTORY
     global NUM_MAX_DOWNLOADS
     global PLEX_NAMING
@@ -124,9 +126,16 @@ def main(argv):
     parser.add_argument('-dir', '--download-directory', action="store", dest="download_directory", help='Directory to store podcasts in')
     parser.add_argument('-db', '--db_path', action="store", dest="db_path", help='Location of the PodGrab.db file')
     parser.add_argument('-m3u', '--create-m3u', action="store_true", dest="create_m3u", help='Create m3u files for playlists')
+    parser.add_argument('-um', '--update_metadata', action="store_true", dest="update_metadata", help='Use ffmpeg to update metadata with the title and description from the feed')
 
 
     arguments = parser.parse_args()
+
+    if arguments.update_metadata:
+        print("Metadata will be updated")
+        UPDATE_METADATA = 1
+    else:
+        print("Metadata will be left alone")
 
     if arguments.download_directory:
         DOWNLOAD_DIRECTORY = arguments.download_directory
@@ -438,7 +447,7 @@ def clean_string(str):
 
 # Change 2011-10-06 - Changed chan_loc to channel_title to help with relative path names
 # in the m3u file
-def write_podcast(item, channel_title, date, type, title, desc):
+def write_podcast(item, channel_title, date, type, title, metadata_feed):
     (item_path, item_file_name) = os.path.split(item)
     plex_info = ""
     item_save_name = item_file_name
@@ -449,40 +458,12 @@ def write_podcast(item, channel_title, date, type, title, desc):
         plex_info = channel_title + "." + struct_time_item.strftime("S%YE%m%d") + "."
         item_save_name = plex_info + title
 
-    if len(item_file_name) > 50:
-        item_file_name = item_file_name[:50]
+    if len(item_save_name) > 50:
+        item_save_name = item_save_name[:50]
 
     local_file = DOWNLOAD_DIRECTORY + os.sep + channel_title + os.sep + clean_string(item_save_name)
-    if type == "video/quicktime" or type == "audio/mp4" or type == "video/mp4":
-        if not local_file.endswith(".mp4"):
-            local_file = local_file + ".mp4"
 
-    elif type == "video/mpeg":
-        if not local_file.endswith(".mpg"):
-            local_file = local_file + ".mpg"
-
-    elif type == "video/x-flv":
-        if not local_file.endswith(".flv"):
-            local_file = local_file + ".flv"
-
-    elif type == "video/x-ms-wmv":
-        if not local_file.endswith(".wmv"):
-            local_file = local_file + ".wmv"
-
-    elif type == "video/webm" or type == "audio/webm":
-        if not local_file.endswith(".webm"):
-            local_file = local_file + ".webm"
-
-    elif type == "audio/mpeg":
-        if not local_file.endswith(".mp3"):
-            local_file = local_file + ".mp3"
-
-    elif type == "audio/ogg" or type == "video/ogg" or type == "audio/vorbis":
-        if not local_file.endswith(".ogg"):
-            local_file = local_file + ".ogg"
-    elif type == "audio/x-ms-wma" or type == "audio/x-ms-wax":
-        if not local_file.endswith(".wma"):
-            local_file = local_file + ".wma"
+    local_file = fix_file_extention(type, local_file)
 
     # Check if file exists, but if the file size is zero (which happens when the user
     # presses Crtl-C during a download) - the the code should go ahead and download
@@ -501,30 +482,145 @@ def write_podcast(item, channel_title, date, type, title, desc):
                 fp.write(chunk)
 
             item_file_name = os.path.basename(fp.name)
-
-            #item_file = urllib2.urlopen(item)
-            #output = open(local_file, 'wb')
-            # 2011-10-06 Werner Avenant - For some reason the file name changes when
-            # saved to disk - probably a python feature (sorry, only wrote my first line of python today)
-            #item_file_name = os.path.basename(output.name)
-            #output.write(item_file.read())
-            #output.close()
             print("Podcast: " + item + " downloaded to: " + local_file)
+
             # 2011-11-06 Append to m3u file
             if CREATE_M3U:
+                print("Creating M3U file in " + DOWNLOAD_DIRECTORY + os.sep + m3u_file)
                 output = open(DOWNLOAD_DIRECTORY + os.sep + m3u_file, 'a')
                 output.write(DOWNLOAD_DIRECTORY + os.sep + channel_title + os.sep + item_file_name + "\n")
                 output.close()
 
+            # add missing metadata in the file to match metadata in the feed
+            if UPDATE_METADATA:
+                metadata_file = read_metadata(local_file)
+                if metadata_file:
+                    for key in sorted(iter(metadata_file)):
+                        print("Existing Metadata: " + key + "=" + metadata_file[key])
+                    metadata_write = write_metadata(local_file, metadata_feed, metadata_file)
             return 'Successful Write'
         except urllib2.URLError as e:
             print("ERROR - Could not write item to file: " + e)
             return 'Write Error'
 
 
+# Fix any odd file endings
+def fix_file_extention(type, local_file):
+    if type == "video/quicktime" or type == "audio/mp4" or type == "video/mp4":
+        if not local_file.endswith(".mp4"):
+            local_file = local_file + ".mp4"
+    elif type == "video/mpeg":
+        if not local_file.endswith(".mpg"):
+            local_file = local_file + ".mpg"
+    elif type == "video/x-flv":
+        if not local_file.endswith(".flv"):
+            local_file = local_file + ".flv"
+    elif type == "video/x-ms-wmv":
+        if not local_file.endswith(".wmv"):
+            local_file = local_file + ".wmv"
+    elif type == "video/webm" or type == "audio/webm":
+        if not local_file.endswith(".webm"):
+            local_file = local_file + ".webm"
+    elif type == "audio/mpeg":
+        if not local_file.endswith(".mp3"):
+            local_file = local_file + ".mp3"
+    elif type == "audio/ogg" or type == "video/ogg" or type == "audio/vorbis":
+        if not local_file.endswith(".ogg"):
+            local_file = local_file + ".ogg"
+    elif type == "audio/x-ms-wma" or type == "audio/x-ms-wax":
+        if not local_file.endswith(".wma"):
+            local_file = local_file + ".wma"
+    return(local_file)
+
+
+# read metadata from an audio or video file.  Assumes that it can call ffmpg in the path.  This dependency should be fixed.
+# I've only tested with mp4 video files and mp3 audio files.  
+def read_metadata(local_file):
+    metadata = metadata_feed = dict()
+    #print("\nReading file: " + local_file)
+    if not os.path.exists(local_file):
+        print("File not found for metadata update")
+        return 1
+        
+    cmd_line = ['ffmpeg', '-loglevel', 'quiet', '-i', local_file, '-f', 'ffmetadata', '-']
+
+    try:
+        process = Popen(cmd_line, stdout=PIPE, stderr=PIPE) # I'm not sure if I want to do anything with stderr yet
+        stdout, stderr = process.communicate()
+    except OSError as e:
+        print >>sys.stderr, "FFMPEG Failed, aborting metadata updates:", e
+        return 0
+    for line in stdout.splitlines():
+        line.rstrip()
+        tokens = line.partition('=')
+        if tokens[2]:
+            #print("DATA: " + tokens[0] + " = " + tokens[2])
+            if tokens[0] == 'title':
+                metadata['TITLE_MATCH'] = tokens[2]
+            elif tokens[0] == 'description' or tokens[0] == 'TDES':
+                metadata['DESCRIPTION_MATCH'] = tokens[2]
+            #elif tokens[0] == 'album':
+            #    metadata['ALBUM_MATCH'] = tokens[2]
+            #elif tokens[0] == 'minor_version':
+            #    metadata['EPISODE_MATCH'] = tokens[2]
+
+            metadata[tokens[0]] = tokens[2]
+        #else:
+        #    print("Not valid metadata: ", line)
+    
+    return(metadata)
+
+
+# write metadata to an audio or video file.  Assumes that it can call ffmpg in the path.  This dependency should be fixed.
+def write_metadata(local_file, metadata_feed, metadata_file):
+    update_needed = 0
+    cmd_line = ['ffmpeg', '-y', '-loglevel', 'quiet', '-i', local_file]
+    (item_path, item_file_name) = os.path.split(local_file)
+    tmp_file = item_path + os.sep + "TMP_" + item_file_name  # note, for ffmpeg this needs to be the same extention
+
+    # Which metadata do we have?
+    if not 'TITLE_MATCH' in metadata_file:
+        #print("Adding Title: " + metadata_feed['title'])
+        update_needed = 1
+        cmd_line.extend(['-metadata', "title=" + metadata_feed['title']])
+        
+    if not 'DESCRIPTION_MATCH' in metadata_file:
+        #print("Adding Description: " + metadata_feed['description'])
+        update_needed = 1
+        cmd_line.extend(['-metadata', "description=" + metadata_feed['description']])
+
+    if update_needed:
+        print("Updating Metadata on " + local_file)
+        
+        cmd_line_mapping = ['-map', '0', '-codec', 'copy']
+        cmd_line_end = [tmp_file]
+        
+        try:
+            rtn = call(cmd_line + cmd_line_mapping + cmd_line_end)
+            if rtn == 0:
+                os.rename(tmp_file, local_file)
+            else:
+                # I have some podcasts that seem to have extra streams in them. I found this on Apple Byte podcast which has RTP hit streams.
+                #print >>sys.stderr, "Child returned", rtn
+                print("Unknown streams found, Trying to copy just one stream of audio and video for metadata")
+                cmd_line_mapping = ['-codec', 'copy']
+                rtn = call(cmd_line + cmd_line_mapping + cmd_line_end)
+                if rtn != 0:
+                    print("Copy Failed")
+                    if os.path.exists(tmp_file):
+                        os.remove(tmp_file)
+                    return rtn
+                else:
+                   os.rename(tmp_file, local_file)
+        except OSError as e:
+            print >>sys.stderr, "Execution failed:", e
+            return 1
+    else:
+        print("File already has embedded title and description, no need to update the file")
+    return 0
+
+
 def does_database_exist(curr_loc):
-    #db_name = "PodGrab.db"
-    #if os.path.exists(curr_loc + os.sep + db_name):
     if os.path.exists(db_path + os.sep + db_name):
         return 1
     else:
@@ -650,6 +746,13 @@ def iterate_channel(chan, today, mode, cur, conn, feed, channel_title):
 
             #item_title = item_title.strip()
             #item_desc = item_desc.strip()
+            metadata_feed = dict()
+            metadata_feed['title'] = item_title
+            metadata_feed['description'] = item_desc
+            metadata_feed['date'] = item_date
+            metadata_feed['file'] = item_file
+            metadata_feed['size'] = item_size
+            metadata_feed['type'] = item_type
 
             has_error = 0
             try:
@@ -670,7 +773,7 @@ def iterate_channel(chan, today, mode, cur, conn, feed, channel_title):
 
             if not has_error:
                 if mktime(struct_time_item) > mktime(struct_last_ep) or mode == MODE_DOWNLOAD:
-                    saved = write_podcast(item_file, channel_title, item_date, item_type, item_title, item_desc)
+                    saved = write_podcast(item_file, channel_title, item_date, item_type, item_title, metadata_feed)
 
                     if saved == 'File Exists':
                         print("File Existed - updating local database's Last Episode")
