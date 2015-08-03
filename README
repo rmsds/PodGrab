@@ -24,7 +24,7 @@ Author: Werner Avenant werner.avenant@gmail.com (http://www.collectiveminds.co.z
 Changes after fork:
 
     - Added support for M3U files listing all files downloaded that day    
-    - Last Episode Detection wasn't always right. It wasn't noticable
+    - Last Episode Detection wasn't always right. It wasn't noticeable
       because if the file existed it wouldn't download the episode. Rewrote
       last_ep logic
     - Changed write_podcast to return if a file existed. This in turn
@@ -33,3 +33,15 @@ Changes after fork:
     - Function update_subscription will check to see if the last_ep is older
       than the existing last_ep
     - Moved NUM_MAX_DOWNLOAD to the front of the file for easy configuration
+
+==== CHANGES MADE AFTER FORK ====
+
+Author: David Smith
+
+Changes after fork:
+
+	- Added option to output file names in an Season/Year Episode/Month+Day Title of Episode format
+	- Added command line switches for db location, download location, plex configuration, M3U creation
+	- Changed mkdir to mkdirs to deal with creating multiple levels of directories
+	- added option to populate missing metadata in the mp3/mp4 file from the information in the feed.
+
