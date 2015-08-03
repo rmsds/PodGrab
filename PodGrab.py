@@ -146,7 +146,7 @@ def main(argv):
         db_path = arguments.db_path
     
     if arguments.max_downloads:
-        NUM_MAX_DOWNLOADS = arguments.max_downloads
+        NUM_MAX_DOWNLOADS = int(arguments.max_downloads)
     print("Max items per podcast is " + str(NUM_MAX_DOWNLOADS))
 
     if arguments.plex_naming:
