@@ -852,9 +852,9 @@ def list_subscriptions(cur, conn):
     try:
         result = cur.execute('SELECT * FROM subscriptions')
         for sub in result:
-            print("Name:\t\t", sub[0])
-            print("Feed:\t\t", sub[1])
-            print("Last Ep:\t", sub[2], "\n")
+            print("Name:\t\t" + sub[0])
+            print("Feed:\t\t" + sub[1])
+            print("Last Ep:\t" + sub[2] + "\n")
             count += 1
         print(str(count) + " subscriptions present")
     except sqlite3.OperationalError:
