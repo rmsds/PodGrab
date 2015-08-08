@@ -167,6 +167,8 @@ def main(argv):
         if not data:
             error_string = "Not a valid XML file or URL feed!"
             has_error = 1
+            exit_clean(error_string, 1)
+            
         else:
             print("XML data source opened\n")
             mode = MODE_SUBSCRIBE
@@ -177,6 +179,7 @@ def main(argv):
         if not data:
             error_string = "Not a valid XML file or URL feed!"
             has_error = 1
+            exit_clean(error_string, 1)
         else:
             print("XML data source opened\n")
             mode = MODE_DOWNLOAD
@@ -212,16 +215,19 @@ def main(argv):
     else:
         error_string = "No Arguments supplied - for usage run 'PodGrab.py -h'"
         has_error = 1
+        exit_clean(error_string, 1)
 
     print("Default encoding: " + sys.getdefaultencoding())
     todays_date = strftime("%a, %d %b %Y %H:%M:%S", gmtime())
     print("Current Directory: " + current_directory)
 
+# Database Check/Create
     if does_database_exist(current_directory):
         connection = connect_database(current_directory)
         if not connection:
             error_string = "Could not connect to PodGrab database file!"
             has_error = 1
+            exit_clean(error_string, 1)
         else:
             cursor = connection.cursor()
     else:
@@ -230,12 +236,15 @@ def main(argv):
         if not connection:
             error_string = "Could not create PodGrab database file!"
             has_error = 1
+            exit_clean(error_string, 1)
         else:
             print("PodGrab database created")
             cursor = connection.cursor()
             setup_database(cursor, connection)
             print("Database setup complete")
 
+
+# Download Directory
     if not os.path.exists(DOWNLOAD_DIRECTORY):
         print("Podcast download directory is missing. Creating...")
         try:
@@ -244,6 +253,7 @@ def main(argv):
         except OSError:
             error_string = "Could not create podcast download sub-directory!"
             has_error = 1
+            exit_clean(error_string, 1)
     else:
         print("Download directory exists: '" + DOWNLOAD_DIRECTORY + "'" )
     if not has_error:
@@ -297,10 +307,19 @@ def main(argv):
         elif mode == MODE_IMPORT:
             import_opml_file(cursor, connection, current_directory, DOWNLOAD_DIRECTORY, import_file_name)
     else:
-        print("Sorry, there was some sort of error: '" + error_string + "'\nExiting...\n")
-        if connection:
-            connection.close()
+        #print("Sorry, there was some sort of error: '" + error_string + "'\nExiting...\n")
+        #if connection:
+        #    connection.close()
+        exit_clean(error_string, 1)
+#
+# End of main()
+#
 
+def exit_clean(error_string, error_code):
+    print("Sorry, there was some sort of error: '" + error_string + "'\nExiting...\n")
+    #if connection:
+    #    connection.close()
+    sys.exit(error_code)
 
 def open_datasource(xml_url):
     try:
