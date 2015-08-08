@@ -45,6 +45,7 @@ import platform
 import traceback
 import unicodedata
 from subprocess import Popen, PIPE, call
+import re
 
 
 MODE_NONE = 70
@@ -256,6 +257,8 @@ def main(argv):
             exit_clean(error_string, 1)
     else:
         print("Download directory exists: '" + DOWNLOAD_DIRECTORY + "'" )
+
+# Main execution
     if not has_error:
         if mode == MODE_UNSUBSCRIBE:
             feed_name = get_name_from_feed(cursor, connection, feed_url)
@@ -386,9 +389,16 @@ def import_opml_file(cur, conn, cur_dir, download_dir, import_file):
                 item_feed = item.getAttribute('xmlUrl').encode('utf-8')
                 item_name = item.getAttribute('title').encode('utf-8')
                 item_name = clean_string(item_name)
-                print("Subscription Title: " + item_name)
-                print("Subscription Feed: " + item_feed)
+                
+                print("Subscription Title: " + '"' + item_name + '"')
+                print("Subscription Feed: " + '"' + item_feed + '"')
                 item_directory = download_dir + os.sep + item_name
+
+                # check in case the feed isn't real
+                # youtube opml files have a header that triggers this
+                if not item_feed or not re.match(r'^http', item_feed):
+                    print("Feed not valid, ignoring")
+                    continue
 
                 if not os.path.exists(item_directory):
                     os.makedirs(item_directory)
