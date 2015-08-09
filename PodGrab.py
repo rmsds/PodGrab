@@ -283,10 +283,10 @@ def main(argv):
             for sub in subs:
                 feed_name = sub[0]
                 feed_url = sub[1]
-                print("Feed for subscription: '" + feed_name + "' from '" + feed_url + "' is updating...")
+                print("Feed for subscription: '" + feed_name + "' from <" + feed_url + "> is updating...")
                 data = open_datasource(feed_url)
                 if not data:
-                    print("'" + feed_url + "' for '" + feed_name + "' is not a valid feed URL!")
+                    print("<" + feed_url + "> for '" + feed_name + "' is not a valid feed URL!")
                 else:
                     message = iterate_feed(data, mode, DOWNLOAD_DIRECTORY, todays_date, cursor, connection, feed_url)
                     print(message)
