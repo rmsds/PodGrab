@@ -451,11 +451,11 @@ def iterate_feed(data, mode, download_dir, today, cur, conn, feed):
                 message += str(num_podcasts) + " have been downloaded from your subscription: '" + channel_title + "'\n"
     except xml.parsers.expat.ExpatError:
         print("ERROR - Malformed XML syntax in feed. Skipping...")
-        message += "0 podcasts have been downloaded from this feed due to RSS syntax problems. Please try again later"
+        message += "0 podcasts have been downloaded from " + channel_title + " due to RSS syntax problems. Please try again later\n"
     except UnicodeEncodeError as e:
         print(e)
         print("ERROR - Unicode encoding error in string. Cannot convert to ASCII. Skipping...")
-        message += "0 podcasts have been downloaded from this feed due to RSS syntax problems. Please try again later"
+        message += "0 podcasts have been downloaded from " + channel_title + " due to RSS syntax problems. Please try again later\n"
     return message
 
 
