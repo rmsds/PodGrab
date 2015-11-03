@@ -768,7 +768,11 @@ def iterate_channel(chan, today, mode, cur, conn, feed, channel_title):
     for item in chan.getElementsByTagName('item'):
         try:
             item_title = item.getElementsByTagName('title')[0].firstChild.data
-            item_desc = item.getElementsByTagName('description')[0].firstChild.data
+            try:
+                item_desc = item.getElementsByTagName('description')[0].firstChild.data
+            except AttributeError:
+                print("This item is missing a Description, using bogus one.")
+                item_desc = "no description"
             item_date = item.getElementsByTagName('pubDate')[0].firstChild.data
             item_file = item.getElementsByTagName('enclosure')[0].getAttribute('url')
             item_size = item.getElementsByTagName('enclosure')[0].getAttribute('length')
